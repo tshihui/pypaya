@@ -5,7 +5,7 @@
 def fib(n):
     """ Fibonacci sequence """
     if n <= 0:
-        return('Please input number greater than 1.')
+        return('Please input positive integer.')
     else:
         i_1 = 0
         i = 1
