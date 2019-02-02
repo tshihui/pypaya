@@ -7,15 +7,13 @@ def fib(n):
     if n <= 0:
         return('Please input positive integer.')
     else:
-        i_1 = 0
-        i = 1
-        seq = [i_1,i]
-        while len(seq) <= n:
-             i_2 = i_1
-             i_1 = i
-             i = i_2 + i_1
-             seq.append(i)
-        print('Fibnoacci sequence with n =', n, 'is :', seq)
+        seq = []
+        for k in range(n):
+            if k <= 1:
+                seq.append(k)
+            else:
+                seq.append(sum(seq[k-2:k]))
+        print('The first ', n, ' numbers of the Fibonacci sequence is :', seq)
 
 #######################
 if __name__ == "__main__":
