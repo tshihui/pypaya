@@ -31,4 +31,32 @@ print(llast[::-1].upper())
 # 3.10
 e2f = dict([['dog','chien'], ['cat', 'chat'], ['walrus', 'morse']])
 
+# 3.11
+e2f['walrus']
 
+# 3.12
+f2e = {}
+for eng, fren in e2f.items():
+    f2e[fren] = eng
+
+# 3.13
+f2e['chien']
+
+# 3.14
+e2f.keys()
+
+# 3.15
+life = {
+    'animals' : {'cats' : {'Henri', 'Grumpy', 'Lucy'}, 'octopi' : {}, 'other' : {}},
+    'plants' : {},
+    'other' : {}
+}
+
+# 3.16
+life.keys()
+
+# 3.17
+life['animals'].keys()
+
+# 3.18
+life['animals']['cats']
