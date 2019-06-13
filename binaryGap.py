@@ -1,3 +1,40 @@
+
+#########################################################
+#------- Solution to identify largest binary gap -------#
+#########################################################
+
+#---------- Version 2 ----------------#
+def find0(binNum):
+    # find first 1 
+    pos1 = binNum.find('1')
+    # find second 1
+    pos2 = binNum.find('1', pos1+2)
+    # return number of 0s
+    count0  = binNum[pos1:pos2+1].count('0')
+    # return cut string 
+    newBinNum = binNum[pos2:len(binNum)]
+
+    if count0 == 0:
+        return(0)
+    else:
+        return(count0, newBinNum)
+
+def binaryGap(N):    
+     # Needs to be improved
+     binNum = "{0:b}".format(N)
+     
+     count0s = []
+     if binNum.count('0') > 0 and binNum.count('1') > 1:
+         while(len(binNum) > 2):
+             binAns = find0(binNum)
+             count0s.append(binAns[0])
+             binNum = binAns[1]
+         return(max(count0s))
+     else:
+         return(0)
+
+
+#---------- Version 1 ----------------#
 def binaryGap(N):    
      # Needs to be improved
      binNum = "{0:b}".format(N)
