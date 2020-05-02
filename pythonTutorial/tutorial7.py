@@ -114,3 +114,4 @@ if __name__ == '__main__':
     print('Using json dump to serialize object:', json.dumps(x))
     print('We can directly dump serialized object into a file using json.dump(x, openedfile)')
     print('To deserialize json file (string back to data), use object = json.load(jsonfile)')
+    print('\nEnd of Tutorial 7')
