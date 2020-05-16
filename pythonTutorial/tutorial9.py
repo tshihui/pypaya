@@ -241,3 +241,78 @@ if __name__ == '__main__':
     dog3 = Dog('wow')
     dog3.add_tricks('cotton candy')
     print(Dog.return_tricks(dog3))
+
+    print('\nRemarks')
+    print('If the same attribute name occurs in both instance & class, lookup'
+          'prioritizes the instance (search in instance first).')
+    print('For eg:'
+          '\nclass Animal():'
+          '\n    animal = "pig"\n'
+          'a = Animal()\n'
+          'a.animal will return pig\n'
+          'a.animal = "cow", will return "cow" instead of "pig"')
+    print('In python, it is a convention to have self as the first argument of a method in class.')
+    print('In other words, self is just an argument name. It can be called anything.')
+
+    print('\nInheritance')
+    print('base class must be defined in the same scope as derived class')
+    print('otherwise, class derivedClass(modname.baseClass) will work too')
+    print('if an attribute reference is not found in a derived class, it will be searched in base class')
+    print('To check if an instance is a class of ClassName, we can use isinstance(obj, className)')
+    print('TRUE will be return if baseclass is parsed for an instance of the derived class.')
+    print('One can check if A is a subclass of B by using issubclass(A, B)')
+
+    print('\nMultiple inheritance')
+    print('\nMultiple inheritance can also occur class derivedClass(base1, base2)')
+    print('attributes will be searched in depth first, left to right order')
+    print('*** here is in fact other paths to access the parent class')
+    print('--- will need to learn more on method resolution order to understand this ----')
+
+    print('\nPrivate Variables')
+    print('private variables are prefixed with __')
+    class Mapping:
+        def __init__(self, iterable):
+            self.items_list = []
+            self.__update(iterable)
+
+        def update(self, iterable):
+            for item in iterable:
+                self.items_list.append(item)
+
+        __update = update  # private copy of original update() method
+
+    class MappingSubclass(Mapping):
+
+        def update(self, keys, values):
+            # provides new signature for update()
+            # but does not break __init__()
+            for item in zip(keys, values):
+                self.items_list.append(item)
+
+    print('\nIterators')
+    print('for calls iter() on a container object (list/dict etc).')
+    print('iter() returns an iterator object defining the method __next__,\n'
+          'which accesses the elements in the container one at a time.\n'
+          'when __next__ reaches the end, it raises StopIteration and tells the for loop to terminate.\n'
+          '__next__ can be called using next()')
+    print('for eg: p = iter([1,2,3])\n'
+          '        next(p)')
+    print('after next(p) prints the last element, calling next(p) again will raise StopIteration')
+    print('for --> gives object to iter() --> gives to __next__ --> read each element and return until the end')
+
+    print('\nGenerators')
+    print('generators act like functions with "yield" statement instead of "return"')
+    print('For eg:\n'
+          'def reverse(data):\n'
+          '    for index in range(len(data)-1, -1, -1):\n'
+          '        yield data[index]\n'
+          'reverse([1,2,3,4]) will return a generator object\n'
+          'for x in reverse([1,2,3,4]) will return what was defined in the generator function.')
+    print('generator remembers all the data values & which statement was last executed\n'
+          'hence is able to continue where it left off.')
+
+
+
+
+
+
