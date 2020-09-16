@@ -329,18 +329,96 @@ if __name__ == '__main__':
     print('essentially we are stacking or unstacking various indices together/apart')
     print('reset_index converts all indices into columns, works on both Series and DF')
     dat = pd.DataFrame({'val': [1, 2, 3, 4], 'co': [1, 3, 5, 3]},
-                       index=pd.MultiIndex.from_product([['oh', 'no'], [1, 2]]))
+                       index=pd.MultiIndex.from_product([['oh', 'no'], [1, 2]],
+                                                        names = ['a','b']))
     print(f'If initial dataset is\n{dat}')
     print('We get\n{}\n'
           'after resetting index'.format(dat.reset_index()))
 
     print('\nData Aggregations on Multiple Indices')
     print('we can get the mean per a multiIndex by doing data.mean(level=xvar)')
+    health_mean = health_data.mean(level='year')
+    dat_mean = dat.mean(level='a')
+    print(health_mean)
+    print(dat_mean)
 
+    print('\nCombining Datasets: Concat & Append')
+    def make_df(cols, ind):
+        """Quickly make a dataframe"""
+        data = {c: [str(c) + str(i) for i in ind]
+                for c in cols}
+        return(pd.DataFrame(data, ind))
 
+    # Recall numpy
+    x = [1,2,3]
+    y = [3,4,5]
+    z = [4,5,6]
+    print(np.concatenate([x,y,z]))
+    # np.concatenate basically combines all into a single array
+    # or
+    x = [[1,2], [3,4]]
+    print(np.concatenate([x,x], axis=1))
 
+    ser1 = pd.Series(['a', 'b', 'c'], index=[1,2,3])
+    ser2 = pd.Series(['b', 'd', 's'], index=[4,5,6])
+    print('Pandas concat:', pd.concat([ser1, ser2]))
 
+    print('concatente higher dimensional objects:')
+    df1 = make_df('AB', [1,2])
+    df2 = make_df('AB', [3, 4])
+    print(df1)
+    print(df2)
+    print(pd.concat([df1, df2])) #rbind
+    print('\n By default, concat is ROW-WISE.')
 
+    df3 = make_df('AB', [0, 1])
+    df4 = make_df('CD', [0, 1])
+    print(df3)
+    print(df4)
+    print(pd.concat([df3, df4], axis=0))
+    print(pd.concat([df3, df4], axis=1))
+    print('Use axis argument. axis=0: row-wise (rbind), axis=1: col-wise (cbind')
+
+    print('\nDuplicate indices')
+    print('pandas concatenation preserves indices while np.concatenate does not')
+    x = make_df('AB', [0,1])
+    y = make_df('AB', [2,3])
+    x.index = y.index
+    print(x.index)
+    print(x)
+    print(y)
+    xyCat = pd.concat([x, y])
+    print('Duplicated indices are kept', xyCat)
+    print(xyCat.index)
+    print('Np version keeps no indices at all', np.concatenate([x,y]))
+
+    print('\nRepeated indices are not a good idea in dataframes')
+    print('Use pd.concat argument: verify_integrity raises an exception when there are duplicated indices\n')
+    try:
+        print(pd.concat([x, y], verify_integrity=True))
+    except ValueError as e:
+        print('ValueError:', e)
+
+    print('\nWe can also choose to ignore existing indices and allow concat to automatically create new ones')
+    print('Using ignore_index in pd.concat', pd.concat([x,y], ignore_index=True))
+
+    print('\nKeys can be also included to preserve the structure of the concat, producing a multi-index DF')
+    print(pd.concat([x,y], keys=['x', 'y']))
+
+    print('\nTo concatenate DFs with different columns, we can use the join argument in pd.concat')
+    print('note that the default join method is outer')
+    df5 = make_df('abc', [4,5])
+    df6 = make_df('cdf', [3,1])
+    print(df5)
+    print(df6)
+    print(pd.concat([df5,df6]))
+    print(pd.concat([df5, df6], join='inner'))
+
+    print('\nAppend: df1.append(df2) is the same as pd.concat([df1,df2])')
+    print('df5.append(df6): ', df5.append(df6))
+    print('pd.concat([df5, df6]): ', pd.concat([df5, df6]))
+    print('pd.append is not the same as list append - does not modify original object')
+    print('in short, to concat many, pd.concat is more efficient than append method')
 
 
 
