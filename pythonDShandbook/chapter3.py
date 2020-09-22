@@ -420,21 +420,148 @@ if __name__ == '__main__':
     print('pd.append is not the same as list append - does not modify original object')
     print('in short, to concat many, pd.concat is more efficient than append method')
 
+    print('\nCombining datasets: merge & join')
+    print('\nCategories of Joins- pd.merge: 1) one-to-one\n'
+          '2) many-to-one 3) many-to-many joins')
+    print('1) one-to-one join')
+    df1 = pd.DataFrame({'employee':['bob', 'jake', 'linda', 'lydia'],
+                        'group': ['account', 'enginer', 'hr', 'hr']})
+    df2 = pd.DataFrame({'employee': ['bob', 'linda'],
+                        'hireDate': ['2004', '2008']})
+    df3 = pd.merge(df1, df2)
+    print(df1)
+    print(df2)
+    print(pd.merge(df1, df2))
 
+    print('2) many-to-one join - preserves duplicates')
+    df4 = pd.DataFrame({'group': ['account', 'enginer', 'hr', 'hr'],
+                        'supervisor': ['mabel', 'john', 'mary', 'krissy']})
+    df5 = pd.merge(df3, df4)
+    print(df4)
+    print(pd.merge(df3, df4))
 
+    print('3) many-to-many join - duplicates in both left & right: exhaustive amount of duplicates')
+    df6 = pd.DataFrame({'group':['account', 'account', 'enginer','hr', 'hr'],
+                        'skills': ['math', 'excel', 'physics', 'communication', 'conversation']})
+    print(pd.merge(df1, df6))
 
+    print('we can use the on argument to specify which is the key column to merge on in pd.merge')
+    print('if var names are different in left & right\n'
+          'need to user left_on and right_on.')
+    print('to drop unnecessary column, we can do pd.merge(df1, df2, left_on="x", right_on="y").drop("a", axis=1)')
+    print(pd.merge(df1, df6).drop('skills', axis=1))
 
+    print('merge can be on index too')
+    df1a = df1.set_index('employee')
+    df2a = df2.set_index('employee')
+    print(df1a)
+    print(df2a)
+    print(pd.merge(df1a, df2a, left_index=True, right_index=True))
+    print('this is essentially the same as df1a.join(df2a)')
+    print(df1a.join(df2a))
+    print('we can also set left_index with right_on and vice versa')
+    print(df1a.columns.values)
+    print(df2)
+    print(pd.merge(df1a, df2, left_index=True, right_on='employee'))
 
+    print('\nSpecifying Set Arithmetic for Joins')
+    df6 = pd.DataFrame({'name': ['peter', 'lydia', 'mayu'],
+                        'food': ['fish', 'cake', 'miso']},
+                       columns=['name', 'food'])
+    df7 = pd.DataFrame({'name': ['mayu', 'joseph'],
+                        'drink': ['wine', 'beeer']},
+                        columns=['name', 'drink'])
+    print(df6)
+    print(df7)
+    print(pd.merge(df6,df7))
+    print('by default, merge performs inner join. we can define how="left", "right", "outer"')
+    print('outer', pd.merge(df6, df7, how='outer'))
+    print('inner: intersect\n'
+          'outer: union\n'
+          'left: all left df\n'
+          'right: all right df')
+    print('left join', pd.merge(df6, df7, how='left'))
+    print('right join', pd.merge(df6, df7, how='right'))
 
+    print('\nOverlapping Column Names: suffixes keyword')
+    df8 = pd.DataFrame({'name':['lydia', 'may', 'grace'],
+                        'rank':[1,2,3]})
+    df9 = pd.DataFrame({'name':['lydia', 'may', 'grace'],
+                        'rank':[3,4,5]})
+    print(df8)
+    print(df9)
+    print('rank in df8 and df9 are not the same. when joining, we can specify to only merge on name')
+    print(pd.merge(df8, df9, on='name'), '\nNotce the suffixes on rank columns')
+    print('we can specify the suffixes we want')
+    print(pd.merge(df8, df9, on='name', suffixes=['_L', '_R']))
 
+    datDir = '~/Documents/Programming/Python/data-USstates-master'
+    pop = pd.read_csv(datDir+'/state-population.csv')
+    areas = pd.read_csv(datDir+'/state-areas.csv')
+    abbrevs = pd.read_csv(datDir+'/state-abbrevs.csv')
 
+    print(pop.head())
+    print(areas.head())
+    print(abbrevs.head())
 
+    m1 = pd.merge(pop, abbrevs, how='left', left_on='state/region',
+                  right_on='abbreviation').drop('abbreviation', axis=1)
+    print(m1)
+    print(m1[m1['population'].isnull()].head())
+    m1.loc[m1['state/region'] == 'PR', 'state'] = 'Puerto Rico'
+    m1.loc[m1['state/region'] == 'USA', 'state'] = 'United States'
+    print(m1.loc[m1['state/region'] == 'USA'])
+    m2 = pd.merge(m1, areas, how='left', on='state')
+    print(m2)
+    print(m2.isnull().any())
+    print(m2['state'][m2['area (sq. mi)'].isnull()].unique())
+    m2.dropna(inplace=True) #removes all rows with NA
 
+    # Problem: rank US states and territories by 2010 pop density
+    m2['popDensity'] = m2['population']/m2['area (sq. mi)']
+    m2010 = m2.query('year == 2010 & ages== "total"')
+    print(m2010.shape)
+    print(m2010.sort_values(by='popDensity', ascending=False))
+    # alternatively, cleaner way:
+    m2010.set_index('state', inplace=True)
+    density = m2010['popDensity'].sort_values(ascending=False)
+    print(density.head())
 
+    print('\nAggregation & Grouping')
+    import seaborn as sns
+    planets = sns.load_dataset('planets')
+    print(planets.shape)
+    print(planets.head())
+    rng = np.random.RandomState(23)
+    ser = pd.Series(rng.rand(5))
+    print(ser)
+    print('df.sum()', ser.sum())
+    print('df.mean()', ser.mean())
+    df = pd.DataFrame({'A': rng.rand(3),
+                       'B': rng.rand(3)})
+    print(df)
+    print('df.mean returns mean of each col\n', df.mean())
+    print('df.mean(axis=1) returns mean of each row\n', df.mean(axis=1))
 
+    print('describe() method is akin to summary in R which provides some sum stats of data')
+    print(planets.dropna().describe())
+    print('other typical methods exist - mean(), max(), prod(), sum()...')
 
+    print('\nGroupBy:split, apply, combine')
+    print('Think of groupby in R: split-apply-combine')
+    df = pd.DataFrame({'key':['a','b','c','a','b', 'c'],
+                       'data':range(6)},
+                      columns=['key', 'data'])
+    print(df)
+    print('a groupby object can be created by calling df.groupby', df.groupby('key'))
+    dfgroupbyobj = df.groupby('key')
+    print('we can then apply the aggregate methods to the groupby object', dfgroupbyobj.sum())
 
+    print('We can select groupby for specifc col in df\n', planets.groupby('method')['orbital_period'].median())
 
+    print('groupby object also supports direct iteration over groups')
+    for (method, group) in planets.groupby('method'):
+        print("{0:40s} shape={1}".format(method, group.shape))
 
 
 
