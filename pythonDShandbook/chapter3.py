@@ -211,7 +211,7 @@ if __name__ == '__main__':
     df = pd.DataFrame(ran.randint(0,20, (3,4)), columns=list('agwo'))
     print('This is the same for DataFrame\n{}'.format(df))
     print('Subtracting first row, we get\n{}'.format(df-df.iloc[0]))
-    print('Subtraction can be done column wise true specifying axis=0 in df.substract()\n'
+    print('Subtraction can be done column wise true specifying axis=0 in df.subtract()\n'
           'For eg, df.subtract(df["g"], axis=0)\n {}'.format(df.subtract(df['g'], axis=0)))
     print('If columns do not match completely, similar to before\n'
           '    first: match all - row/col wise\n'
@@ -563,8 +563,123 @@ if __name__ == '__main__':
     for (method, group) in planets.groupby('method'):
         print("{0:40s} shape={1}".format(method, group.shape))
 
+    print('Describe method can be also be used on groupby objects')
+    print(planets.groupby('method')['year'].describe())
+    print('Using .unstack()')
+    print(planets.groupby('method')['year'].describe().unstack())
 
+    print('/nAggregate, filter, transform, apply')
+    rng = np.random.RandomState(0)
+    df = pd.DataFrame({'key':['a', 'b', 'c', 'a', 'b', 'c'],
+                       'data1':range(6),
+                       'data2':rng.randint(0, 10, 6)}, columns=['key', 'data1', 'data2'])
+    print(df)
+    print('1) Aggregation')
+    print('Allows for applying multiple functions to groups in groupby objects in one string of code')
+    print(df.groupby('key').aggregate(['min', np.median, 'max']))
 
+    print('2) Filtering')
+    print('Allows for filtering on defined logical function')
+    def filter_func(x):
+        return x['data2'].std() > 4
+
+    print(df.groupby('key').std())
+    print(df.groupby('key').filter(filter_func))
+    print('filter() returns boolean values which get passes back onto the groupby object')
+
+    print('3) Transformation')
+    print(df.groupby('key').transform(lambda x: x - x.mean()))
+
+    print('4) Apply')
+    print('Allows for application of function onto groupby results - function takes a Df, returns Df/Series/scalar')
+    def norm_by_data2(x):
+        x['data1'] /= x['data2'].sum()
+        return x
+    print(df.groupby('key').apply(norm_by_data2))
+
+    print('5) Specifying keys for groupby splits')
+    L = [0,1,0,1,2,0]
+    D = {'a':'consonant', 'b':'consonant', 'c':'vowel'}
+    print(f'For example, if we specify split to be on, {L}, we get {df.groupby(L).sum()}\n'
+          f'We can also split by dictionary mapping such as {D}\n'
+          f'We will get {df.set_index("key").groupby(D).sum()}\n'
+          f'In other words, unless we specify the column name in groupby() for split, index will be reference\n'
+          f'Therefore for {df.set_index("key")}\n'
+          f'we can get {df.set_index("key").groupby(str.lower).sum()}\n'
+          f'Multi-index can also be used in groupby.{df.set_index("key").groupby([str.lower, D]).mean()}')
+
+    decade = 10 * (planets['year']//10)
+    decade = decade.astype(str) + 's'
+    decade.name = 'decade'
+    print(decade)
+    print('To return the sum of "number" in planets df grouping by method and number of decades\n'
+          f'We can get \n{planets.groupby(["method", decade])["number"].sum().unstack().fillna(0)}')
+
+    print('\nPivot tables are like multidimensional groupby')
+    titanic = sns.load_dataset('titanic')
+    print(titanic.head())
+    print('The long coding that we will get when trying to groupby multiple indexes can be resolved '
+          f'with the use of pivot tables.\n{titanic.groupby(["sex", "class"])["survived"].aggregate("mean").unstack()}')
+    print('Pivot tables can be achieved with pivot_table method\n'
+          f'{titanic.pivot_table("survived", index="sex", columns="class")}\n'
+          f'a shorter string of code with pivot_table instead of aggregate returns the same output')
+
+    print('Mutilevel pivot tables')
+    age = pd.cut(titanic['age'], [0, 18,80])
+    print(titanic.pivot_table('survived', ['sex', age], 'class'))
+    fare = pd.qcut(titanic['fare'],2)
+    print('We can automatically compute quantiles by using pd.qcut\n'
+          f'{titanic.pivot_table("survived", ["sex", age], [fare, "class"])}\n'
+          f'we will get pivot table tabulating results for survived, by sex and age, and 2 quantiles of fare & class.')
+    print('df.pivot_table(data, values, index, columns, aggfunc, fill_value, margins, dropna, margins_name)'
+          'is the full call for pivot_table\n'
+          'the default aggregate function in pivot_table is mean. a dictionary can also be given to apply specifc'
+          'functions to a column.\n'
+          'For example,'
+          f'{titanic.pivot_table(index="sex", columns="class", aggfunc={"survived":sum, "fare":"mean"})}\n'
+          f'values have been left out here as the function will automatically select "survived" and "fare"\n'
+          f'which have been parsed in the dictionary to aggfunc.\n'
+          f'If one is keen to compute totals, we can use margins\n'
+          f'{titanic.pivot_table("survived", index="sex", columns="class", margins=True)}\n'
+          f'the totals column name can be set using margins_name="xxx", otherwise default="All"')
+
+    print('Example data...')
+    births = pd.read_csv("/Users/shihuitan/Documents/Programming/Python/births.csv")
+    print(births.head())
+    births['decade'] = 10 * (births['year'] // 10)
+    print(births.pivot_table('births', index='decade', columns='gender', aggfunc='sum'))
+    import matplotlib.pyplot as plt
+    sns.set()
+    births.pivot_table("births", index="year", columns='gender', aggfunc='sum').plot()
+    plt.ylabel('total births per year')
+    # plt.show()
+    # data cleaning
+    quartiles = np.percentile(births['births'], [25, 50, 75])
+    mu = quartiles[1]
+    sig = 0.74 * (quartiles[2] - quartiles[0]) # this gives a robust estimate of the sample mean
+    # 0.74 * IQR of gaussian distribution
+    births = births.query('(births > @mu - 5 * @sig) & (births < @mu + 5 * @sig)')
+    # set day column to integer as it has become a string due to null values previously
+    births['day'] = births['day'].astype(int)
+    # create a date index
+    births.index = pd.to_datetime(10000 * births.year +
+                                  100 * births.month + births.day, format='%Y%m%d')
+
+    births['dayofweek'] = births.index.dayofweek
+    import matplotlib as mpl
+    births.pivot_table('births', index='dayofweek', columns='decade', aggfunc='mean').plot()
+    plt.gca().set_xticklabels(['Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'])
+    plt.ylabel('mean births by day')
+    plt.show()
+
+    births_by_date = births.pivot_table('births', [births.index.month, births.index.day])
+    # this results in 2D pivot table - need to flatten it. can be done by converting both into a single index
+    print(births_by_date.head())
+    births_by_date.index = [pd.datetime(2012, month, day) for (month, day) in births_by_date.index]
+    print(births_by_date.head())
+    fig, ax = plt.subplots(figsize=(12,4))
+    births_by_date.plot(ax=ax)
+    plt.show()
 
 
 
