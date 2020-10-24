@@ -670,8 +670,8 @@ if __name__ == '__main__':
     births.pivot_table('births', index='dayofweek', columns='decade', aggfunc='mean').plot()
     plt.gca().set_xticklabels(['Mon', 'Tue', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'])
     plt.ylabel('mean births by day')
-    plt.show()
 
+    # plt.show()
     births_by_date = births.pivot_table('births', [births.index.month, births.index.day])
     # this results in 2D pivot table - need to flatten it. can be done by converting both into a single index
     print(births_by_date.head())
@@ -679,7 +679,230 @@ if __name__ == '__main__':
     print(births_by_date.head())
     fig, ax = plt.subplots(figsize=(12,4))
     births_by_date.plot(ax=ax)
+    # plt.show()
+
+    print('Vectorized String Operations\n')
+    data = ['peter', 'pAul', 'Mary', None, 'Guido']
+    names = pd.Series(data)
+    print('we can call a single function to capitalize all letters in names and skipover None values\n'
+          f'{names.str.capitalize()}')
+    monte = pd.Series(['Graham Chapman', 'John Cleese', 'Terry Gilliam',
+                       'Eric Idle', 'Terry Jones', 'Michael Palin'])
+    print('pandas vectorized string methods mirror the existing python string methods available.\n'
+          f'for example, we can do {monte.str.lower()}\n'
+          f'or {monte.str.len()}\n'
+          f'or even, {monte.str.startswith("T")}\n'
+          f'also, {monte.str.split()}\n'
+          f'some methods can also take in regular expressions\n'
+          f'for eg, {monte.str.extract("([A-Za-z]+)")}\n'
+          f'or.. finding names that start or end with consonants {monte.str.findall(r"^[^AEIOU].*[^aeious]$")}')
+
+    print('Vectorized item access & slicing:\n'
+          'df.str.slice(start, stop) is the same as df.str[start, stop]\n'
+          f'{monte.str.slice(0,3)}, returns string from position 0 to 2 (3 not included)\n'
+          f'df.str.get(index) and df.str[index] are similar, to retrieve element in position.\n'
+          f'Combining split & get can help you obtain last element of split results\n'
+          f'{monte.str.split().str.get(-1)}\n'
+          f'There also exists a get_dummies() variable, that performs 1 hot encoding for each factor in variable.')
+    full_monte = pd.DataFrame({'name':monte,
+                               'info':['B|C|D', 'B|D', 'A|C', 'B|D', 'B|C', 'B|C|D']})
+    print(f'{full_monte.head()}\n'
+          f'using get_dummies, {full_monte["info"].str.get_dummies("|")}\n'
+          f'this method is extremely useful in cleaning data. ')
+
+    # try:
+    #     recipes = pd.read_json('/Users/shihuitan/Documents/Programming/Python/recipeitems-latest.json')
+    # except ValueError as e:
+    #     print('ValueError:', e)
+
+    # with open('/Users/shihuitan/Documents/Programming/Python/recipeitems-latest.json') as f:
+    #    line = f.readline()
+    # print(pd.read_json(line, lines=True).head)
+    # the data is broken as of 10/10/2020
+
+    # print('Imagine we have gotten the ValueError: Trailing data\n'
+    #      'that would mean that the datafile in use has each line as a valid JSON, but the full file isnt.\n'
+    #      'What thus has to be done, would be to string the lines together, for example:')
+    # with open('recipeitems-latest.json', 'r') as f:
+        # extract every line
+    #    data = (line.strip() for line in f)
+        # reformat so that each line is the element of a list
+    #    data_json = "[{0}]".format(','.join(data))
+    # read results as a JSON
+    # recipes = pd.read_json(data_json)
+
+    # checking len per row, we can use recipes.ingredients.str.len().describe()
+    # find recipes with the longest ingredient list: recipes.name[np.argmax(recipes.ingredients.str.len())]
+    # find # of recipes for breakfast: recipes.description.str.contains('[Bb]reakfast').sum()
+    # find # of recipes with cinnamon: recipes.ingredients.str.contains('[Cc]innamon').sum()
+    # find # of recipes which misspelled cinnamon: recipes.ingredients.str.contains('[Cc]inanmon').sum()
+    # A simple recipe recommender - given list of ingredients, find a recipe with those ingredients.
+    # for eg,
+    spice_list = ['salt', 'pepper', 'oregano', 'sage', 'parsley', 'rosemary', 'tarragon', 'thyme', 'paprika',
+    'cumin']
+
+    import re
+    # spice_df = pd.DataFrame((dict((spice, recipes.ingredients.str.contains(spice, re.IGNORECASE)) for spice in spice_list))
+    # the above creates a boolean dataframe, true if spice in each recipe, false otherwise.
+    # selection = spice_df.query('parsley & paprika & tarragon') can be used to select recipes with these 3 spices
+    # recipes.names[selection.index]
+
+    print('Working with time series')
+    from datetime import datetime
+    from dateutil import parser
+
+    date = parser.parse("4th of July, 2014")
+    datenp = np.array('2015-07-02', dtype=np.datetime64)
+    datepd = pd.to_datetime("4th of August, 2019")
+    print(f'{datetime(year=2010, month=10, day=10)}\n'
+          f'{date}\n'
+          f'day of the week: {date.strftime("%A")}\n'
+          f'NumPy version of datetime64 allows for dates as 64 bit integers - allows arrays of dates to be represented compactly.\n'
+          f'{datenp}\n'
+          f'with numpy dates, it is easy for data manipulations\n'
+          f'{datenp + np.arange(12)}\n'
+          f'however, datetime64/timedelta64 are built on fundamental time units\n'
+          f'in other words, for time resolution of one ns, there is only enough to encode 2^64, about 600 years\n'
+          f'np infers desired unit based on input {np.datetime64("2014-05-02")}\n'
+          f'{np.datetime64("2014-03-05 12:10")}\n'
+          f'you can also force the units {np.datetime64("2014-04-20 12:49:10", "ns")}\n'
+          f'In pandas, a DatetimeIndex can be used to index data in series or dataframe.\n'
+          f'{datepd}, {datepd.strftime("%A")}\n'
+          f'Again, vectorized operations can be performed on pandas datetime object\n'
+          f'{datepd + pd.to_timedelta(np.arange(12), "D")}, vector of 12 consecutive days from date.\n')
+
+    print(f'Indexing data by times - Pandas series\n')
+    index = pd.DatetimeIndex(['2014-04-04', '2014-05-04', '2014-06-04', '2014-07-04'])
+    data = pd.Series([1,2,3,4], index=index)
+    print(f'With data indexed by datetime for eg {data}\n'
+          f'one can extract subsets by index\n'
+          f'{data["2014-04-04":"2014-06-04"]}\n'
+          f'You can also specify just the year to slice all rows from that year')
+
+    dates = pd.to_datetime([datetime(2015, 7, 4), '5th of July 2014', '2014-Jul-3', '08-08-2015', '20160401'])
+    print('Python built-in or numpy vs pandas\n'
+          'datetime - numpy.datetime64 - Timestamp/DatetimeIndex \n'
+          'numpy.datetime64 - Period/PeriodIndex\n'
+          'datetime.timedelta - numpy.timedelta64 - Timedelta/TimedeltaIndex\n'
+          '! passing SINGLE Date to pd.to_datetime() returns TIMESTAMP\n'
+          '! passing a series of dates to pd.to_datetime() returns DATETIMEINDEX\n'
+          f'{dates}\n'
+          f'DateTimeIndex can be converted to PeriodIndex with to_period() function\n'
+          f'"D" in to_period will indicate the frequency {dates.to_period("D")}\n'
+          f'A TimeDeltaIndex is created when date is subtracted from another\n'
+          f'{dates - dates[0]}')
+
+    from pandas.tseries.offsets import BDay
+    print('Pandas also has functions to produce regular date sequences\n'
+          'for eg, pd.date_range(), pd.timedelta_range() and pd.period_range()\n'
+          f'with default 1 day frequency, {pd.date_range("2013-04-04", "2013-04-05")}\n'
+          f'date_range can also be used by stating a startpoint & number of periods\n'
+          f'{pd.date_range("2014-03-01", periods=4, freq="MS")}\n'
+          f'We can also do this for period, {pd.period_range("2020-01", periods=3, freq="M")}\n'
+          f'Also for timedelta, {pd.timedelta_range(0, periods=9, freq="H")}\n'
+          f'If quarterly or annual code is used, for eg Q, BQ, QS, or A, the month used\n'
+          f'to mark the quarter for eg, can be changed by specifying "Q-JAN"\n'
+          f'Additionally, numbers can be added for specific frequencies\n'
+          f'for eg, {pd.timedelta_range(0, periods=9, freq="2H30T")}\n'
+          f'note that the short codes used are related to pandas timeseries offsets - pd.tseries.offsets module\n'
+          f'{pd.date_range("2015-04-01", periods=5, freq=BDay())}')
+
+    data = pd.read_csv('/Users/shihuitan/Documents/Programming/Python/Fremont_Bridge_Bicycle_Counter.csv',
+                       index_col='Date', parse_dates=True)
+    data.columns = ['Total', 'East', 'West']
+    print('Fremont Bridge example\n'
+          f'{data.head()}\n'
+          f'{data.dropna().describe()}\n')
+
+    data.plot()
+    plt.ylabel('Hourly Bicycle Count')
     plt.show()
+
+    print('we can resample the data to make it less dense')
+    weekly = data.resample('W').sum()
+    weekly.plot(style=[':', '--', '-'])
+    plt.ylabel('Weekly bicycle count')
+    plt.show()
+
+    print('we can also do a 30 day rolling mean on the data')
+    daily = data.resample('D').sum()
+    daily.rolling(30, center=True).sum().plot(style=[':', '--', '-'])
+    plt.ylabel('mean hourly count')
+    plt.show()
+
+    # for a smoother window
+    daily.rolling(30, center=True, win_type='gaussian').sum(std=10).plot(style=[':','--','-'])
+    plt.ylabel('mean hourly rate (gaussian)')
+    plt.show()
+
+    # other exploration
+    # looking at average traffic at time of day
+    by_time = data.groupby(data.index.time).mean()
+    hourly_ticks = 4 * 60 * 60 * np.arange(6)
+    by_time.plot(xticks=hourly_ticks, style=[':', '--', '-'])
+    plt.show()
+
+    # by day of week
+    by_weekday = data.groupby(data.index.dayofweek).mean()
+    print(by_weekday.shape)
+    by_weekday.index = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat','Sun']
+    by_weekday.plot(style=[':', '--', '-'])
+    plt.show()
+
+    # groupby weekday weekend & hour
+    weekend = np.where(data.index.weekday < 5, 'weekday', 'weekend')
+    by_time = data.groupby([weekend, data.index.time]).mean()
+    print(by_time.shape)
+    fig, ax = plt.subplots(2, figsize=(14,5))
+    by_time.loc['weekday'].plot(ax=ax[0], title='weekdays', xticks=hourly_ticks,
+                               style=[':', '--', '-'])
+    by_time.loc['weekend'].plot(ax=ax[1], title='weekends', xticks=hourly_ticks,
+                               style=[':', '--', '-'])
+    plt.show()
+
+
+    print('High-performance pandas: eval() and query()\n'
+          'experimental tools to access C-speed operations with pandas\n')
+    rng = np.random.RandomState(42)
+    x = rng.rand(1000000)
+    y = rng.rand(1000000)
+    print('Pandas rand method will work faster than comprehension, however \n'
+          'things become slow if you start making it evaluate more than 2 subexpressions\n'
+          'in one statement.\n'
+          'Every intermediate step is explicitly allocated in memory.\n'
+          'The solution is numexpr package which allows evaluation element by element - no need to\n'
+          'use up memory for an entire intermediate arrays')
+
+    import numexpr
+    mask_numexpr = numexpr.evaluate('(x > 0.5) & (y < 0.5)')
+    # print(np.allclose(mask, mask_numexpr), '\n'
+    #                                      f'{mask_numexpr}')
+
+    nrows, ncols = 100000, 100
+    rng = np.random.RandomState(34)
+    df1, df2, df3, df4 = (pd.DataFrame(rng.rand(nrows, ncols)) for i in range(4))
+    print(df1.head(),
+         f'both methods return the same results {np.allclose(df1+df2+df3+df4, pd.eval("df1+df2+df3+df4"))}')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
